@@ -127,23 +127,23 @@ def __pyPoint( point ):
     x,y=point
     return (int(x), __H-int(y))
 
-def affiche_pixel(point, couleur):
+def affiche_pixel(point, couleur, target = None):
     """ affiche un pixel """
     point = __pyPoint(point)
-    __screen.set_at( point, couleur)
+    (__screen if not target else target).set_at( point, couleur)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_ligne(point_depart, point_arrivee, couleur,epaisseur = 1):
+def affiche_ligne(point_depart, point_arrivee, couleur,epaisseur = 1, target = None):
     """ affiche un segment
         la largeur en pixel vaut 1 par défaut et est optionnelle
     """
     point_depart,point_arrivee =__pyPoint(point_depart),__pyPoint(point_arrivee)
-    pygame.draw.line(__screen, couleur, point_depart, point_arrivee, epaisseur)
+    pygame.draw.line((__screen if not target else target), couleur, point_depart, point_arrivee, epaisseur)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_rectangle(point1,point2,couleur,epaisseur = 1):
+def affiche_rectangle(point1,point2,couleur,epaisseur = 1, target = None):
     """ affiche un rectangle non rempli dont point1 et point2 sont des sommets non adjacents """
     x1,y1=point1
     x2,y2=point2
@@ -153,11 +153,11 @@ def affiche_rectangle(point1,point2,couleur,epaisseur = 1):
     point_left_top = __pyPoint(point_left_top)
 
     rectangle = pygame.Rect( point_left_top, (largeur,hauteur))
-    pygame.draw.rect(__screen,couleur,rectangle,epaisseur)
+    pygame.draw.rect((__screen if not target else target),couleur,rectangle,epaisseur)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_rectangle_plein(point1,point2,couleur):
+def affiche_rectangle_plein(point1,point2,couleur, target = None):
     """ affiche un rectangle plein dont point1 et point2 sont des sommets non adjacents """
     x1,y1=point1
     x2,y2=point2
@@ -166,39 +166,39 @@ def affiche_rectangle_plein(point1,point2,couleur):
     hauteur = max(y1,y2) - min(y1,y2)
     point_left_top = __pyPoint(point_left_top)
     rectangle = pygame.Rect( point_left_top, (largeur,hauteur))
-    pygame.draw.rect(__screen,couleur,rectangle,0)
+    pygame.draw.rect((__screen if not target else target),couleur,rectangle,0)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_cercle(centre, rayon, couleur,epaisseur = 1):
+def affiche_cercle(centre, rayon, couleur,epaisseur = 1, target = None):
     """ dessine un cercle non rempli """
     centre = __pyPoint(centre)
-    pygame.draw.circle(__screen,couleur,centre,rayon,epaisseur)
+    pygame.draw.circle((__screen if not target else target),couleur,centre,rayon,epaisseur)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_cercle_plein(centre, rayon, couleur):
+def affiche_cercle_plein(centre, rayon, couleur, target = None):
     """ dessine un cercle plein """
     centre = __pyPoint(centre)
-    pygame.draw.circle(__screen,couleur,centre,rayon,0)
+    pygame.draw.circle((__screen if not target else target),couleur,centre,rayon,0)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_triangle(point1,point2,point3,couleur,epaisseur=1):
+def affiche_triangle(point1,point2,point3,couleur,epaisseur=1, target = None):
     """ affiche un triangle non rempli """
     point1,point2,point3 = __pyPoint(point1),__pyPoint(point2),__pyPoint(point3)
-    pygame.draw.polygon(__screen,couleur,[point1,point2,point3],epaisseur)
+    pygame.draw.polygon((__screen if not target else target),couleur,[point1,point2,point3],epaisseur)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_triangle_plein(point1,point2,point3,couleur):
+def affiche_triangle_plein(point1,point2,point3,couleur, target = None):
     """ affiche un triangle rempli """
     point1,point2,point3 = __pyPoint(point1),__pyPoint(point2),__pyPoint(point3)
-    pygame.draw.polygon(__screen,couleur,[point1,point2,point3],0)
+    pygame.draw.polygon((__screen if not target else target),couleur,[point1,point2,point3],0)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_arc_cercle(centre,rayon,angle_debut,angle_fin,couleur,epaisseur=1):
+def affiche_arc_cercle(centre,rayon,angle_debut,angle_fin,couleur,epaisseur=1, target = None):
     """ affiche un arc de cercle
         les angles sont en degrés de -360 à +360
     """
@@ -209,11 +209,11 @@ def affiche_arc_cercle(centre,rayon,angle_debut,angle_fin,couleur,epaisseur=1):
     angle_debut = angle_debut* math.pi / 180
     angle_fin = angle_fin* math.pi / 180
 
-    pygame.draw.arc(__screen,couleur,rectangle,angle_debut,angle_fin,epaisseur)
+    pygame.draw.arc((__screen if not target else target),couleur,rectangle,angle_debut,angle_fin,epaisseur)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_ellipse(point1,point2,couleur,epaisseur = 1):
+def affiche_ellipse(point1,point2,couleur,epaisseur = 1, target = None):
     """ affiche une ellipse non remplie dont point1 et point2 sont des sommets non adjacents du rectangle circonscrit à l'ellipse """
     x1,y1=point1
     x2,y2=point2
@@ -222,11 +222,11 @@ def affiche_ellipse(point1,point2,couleur,epaisseur = 1):
     largeur = max(x1,x2) - min(x1,x2)
     hauteur = max(y1,y2) - min(y1,y2)
     rectangle = pygame.Rect( point_left_top, (largeur,hauteur))
-    pygame.draw.ellipse(__screen,couleur,rectangle,epaisseur)
+    pygame.draw.ellipse((__screen if not target else target),couleur,rectangle,epaisseur)
     if __AFFICHE_AUTO:
         affiche_tout()
 
-def affiche_ellipse_plein(point1,point2,couleur):
+def affiche_ellipse_plein(point1,point2,couleur, target = None):
     """ affiche une ellipse remplie dont point1 et point2 sont des sommets non adjacents du rectangle circonscrit à l'ellipse """
     x1,y1=point1
     x2,y2=point2
@@ -235,7 +235,7 @@ def affiche_ellipse_plein(point1,point2,couleur):
     largeur = max(x1,x2) - min(x1,x2)
     hauteur = max(y1,y2) - min(y1,y2)
     rectangle = pygame.Rect( point_left_top, (largeur,hauteur))
-    pygame.draw.ellipse(__screen,couleur,rectangle,0)
+    pygame.draw.ellipse((__screen if not target else target),couleur,rectangle,0)
     if __AFFICHE_AUTO:
         affiche_tout()
 
