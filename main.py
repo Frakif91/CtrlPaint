@@ -9,7 +9,7 @@ Coord = Tuple[int, int]
 Pixel = Tuple[int, int]
 Couleur = Tuple[int, int, int]
 
-EMPTY_COLOR = Color(0, 0, 0)
+EMPTY_COLOR = (0, 0, 0)
 AVAILABLE_COLOR : List[Color] = [
     #Bleu,            Violet,           Magenta,          Rouge,            Orange,           Jaune,            Vert,             Vert foncée,      Noir        et    Blanc
     Color("#0000dd"), Color("#8800dd"), Color("#dd00dd"), Color("#dd0000"), Color("#dd8800"), Color("#00dd00"), Color("#005500"), Color("#000000"), Color("#d0d0d0")
@@ -33,29 +33,48 @@ def fenetre_vers_grille(x,y):
 def add_coord(coord1 : Coord, coord2 : Coord) -> Coord:
     return (coord1[0] + coord2[0], coord1[1] + coord2[1])
 
+def clampf(v : float, minv : float, maxv : float):
+    return min(max(value,minv),maxv)
+
+def lerp(v1 : float, v2 : float, w : float) -> float:
+    return (v1 + (v2*w))
+
+def lerp(c1 : Couleur, c2 : Couleur, w : float):
+    r1, g1, b1 = c1
+    r2, g2, b2 = c2
+    return (
+        lerp(r1,r2,w),
+        lerp(g1,g2,w),
+        lerp(b1,b2,w)
+    )
+
+def lerp(c1 : Color, c2 : Color, w : float) -> Color:
+    return Color(
+        lerp(c1.rgb)
+    )
 
 class Drawing:
-    
+
     """Rectangle"""
     def __init__(self, rect : Rect, color : Couleur, width : int = 1):
         self.type : str = "rect"
         self.rect = rect
         self.color = color
         self.width = width
-    
+
     """Circle"""
     def __init__(self, center : Coord, radius_horizontal : int, radius_vertical : int, color : Couleur, width : int = 1):
         self.type : str
         self.color = color
         self.radiuses = (radius_horizontal, radius_vertical)
         self.width = width
-    
+
     """Line"""
     def __init__(self, start : Coord, end : Coord, color : Couleur, width : int = 1):
         self.type : str
         self.color = color
         self.width = width
-    
+
     def draw(self, surf) -> Surface:
         if not hasattr(self,"type"):
             raise NotImplementedError("Type de dessin non implémenté")
@@ -77,7 +96,7 @@ class Canvas(Surface):
     def __init__(self, taille : Coord):
         super().__init__(taille, pygame.SRCALPHA)
         self.draw_history : List[Drawing] = []
-    
+
     def refresh(self):
         affiche_rectangle_plein((0,0), self.get_size(), blanc, self)
         for drawing in self.draw_history:
@@ -86,19 +105,19 @@ class Canvas(Surface):
     def draw_shape(self, drawing : Drawing):
         self.draw_history.append(drawing)
         self.refresh()
-    
+
     def rewind(self, step : int = 1):
         for i in range(len(self.draw_history), max(len(self.draw_history) - step ,-1), -1):
             pass
 
 class Interface:
-    
+
     def __init__(self, size : Coord):
         init_fenetre(size[0], size[1], "Ctrl Paint")
         self.size = size
         self.choosen_color = noir
         self.canvas = Canvas(size)
-    
+
     def draw_background(self):
         color1 = Color("#388CA5")
         color2 = Color("#38AAB9")
@@ -118,10 +137,10 @@ class Interface:
             for y in range(0, 32*3, 32):
                 color : pygame.Color = AVAILABLE_COLOR[x//32]
                 if y == 0:
-                    color = color.lerp(blanc, fade_scale)
+                    color = lerp(blanc, fade_scale)
                 elif y == 64:
-                    color = color.lerp(noir, fade_scale)
-                
+                    color = lerp(noir, fade_scale)
+
                 affiche_rectangle((x,y), (x+30,y+30), noir, 2)
                 affiche_rectangle((x,y), (x+30,y+30), blanc, 1)
                 affiche_rectangle_plein((x+1,y+1), (x+29,y+29), color, 0)
