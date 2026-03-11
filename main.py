@@ -1,6 +1,6 @@
 from pygame import Surface, Vector2, Rect, Color
 from graphics import *
-from typing import List, Tuple
+from typing import List, Tuple, overload
 import math
 import random
 import time
@@ -34,24 +34,31 @@ def add_coord(coord1 : Coord, coord2 : Coord) -> Coord:
     return (coord1[0] + coord2[0], coord1[1] + coord2[1])
 
 def clampf(v : float, minv : float, maxv : float):
-    return min(max(value,minv),maxv)
+    return min(max(v,minv),maxv)
 
-def lerp(v1 : float, v2 : float, w : float) -> float:
-    return (v1 + (v2*w))
+def get_rgb(color : Color) -> Couleur:
+    return (color.r, color.g, color.b)
 
-def lerp(c1 : Couleur, c2 : Couleur, w : float):
-    r1, g1, b1 = c1
-    r2, g2, b2 = c2
-    return (
-        lerp(r1,r2,w),
-        lerp(g1,g2,w),
-        lerp(b1,b2,w)
-    )
 
-def lerp(c1 : Color, c2 : Color, w : float) -> Color:
-    return Color(
-        lerp(c1.rgb)
-    )
+def lerpf(v1 : float, v2 : float, w : float) -> float:
+    return (v1 + ((v2-v1)*w))
+
+def lerpi(i1 : int, i2 : int, w : float) -> int:
+    return int(i1 + ((i2-i1)*w))
+
+def lerp_color(color1 : Couleur, color2 : Couleur, w : float) -> Color:
+    if color1 is pygame.Color and color1 is pygame.Color:
+        color1 = get_rgb(color1)
+        color2 = get_rgb(color2)
+    
+    r = lerpi(color1[0], color2[0], w)
+    g = lerpi(color1[1], color2[1], w)
+    b = lerpi(color1[2], color2[2], w)    
+    return Color(r,g,b)
+
+def addt(t1 : Tuple[float], t2 : Tuple[float]) -> Tuple[float]:
+    assert len(t1) == len(t2), "Les tuples doivent avoir la mâme taille"
+    return [t1[i] + t2[i] for i in range(len(t1))]
 
 class Drawing:
 
@@ -118,28 +125,23 @@ class Interface:
         self.choosen_color = noir
         self.canvas = Canvas(size)
 
-    def draw_background(self):
+    def draw_background(self, offset : Coord = (0,0)):
         color1 = Color("#388CA5")
         color2 = Color("#38AAB9")
         for x in range(0, self.size[0], TAILLE_CASE):
             for y in range(0, self.size[1], TAILLE_CASE):
-                if (x+y) % 80 == 0:
-                    affiche_rectangle_plein((x,y), (x+TAILLE_CASE,y+TAILLE_CASE), color1)
-                else:
-                    affiche_rectangle_plein((x,y), (x+TAILLE_CASE,y+TAILLE_CASE), color2)
+                affiche_rectangle_plein(addt(offset,(x,y)), addt(offset,(x+TAILLE_CASE,y+TAILLE_CASE)), color1 if (x+y) % 80 == 0 else color2)
 
     def draw_interface_color(self):
-
         offset : Coord = (10,10)
         fade_scale = 0.4
-
         for x in range(0, 32*len(AVAILABLE_COLOR), 32):
             for y in range(0, 32*3, 32):
                 color : pygame.Color = AVAILABLE_COLOR[x//32]
                 if y == 0:
-                    color = lerp(blanc, fade_scale)
+                    color = lerp_color(blanc, color, fade_scale)
                 elif y == 64:
-                    color = lerp(noir, fade_scale)
+                    color = lerp_color(noir, color, fade_scale)
 
                 affiche_rectangle((x,y), (x+30,y+30), noir, 2)
                 affiche_rectangle((x,y), (x+30,y+30), blanc, 1)
@@ -149,6 +151,7 @@ class Interface:
         self.canvas.refresh()
 
 def main():
+    affiche_auto_off()
     interface = Interface(TAILLE_FENETRE)
     interface.draw_background()
     interface.draw_interface_color()
