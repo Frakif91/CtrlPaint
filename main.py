@@ -56,6 +56,12 @@ def lerp_color(color1 : Couleur, color2 : Couleur, w : float) -> Color:
     b = lerpi(color1[2], color2[2], w)    
     return Color(r,g,b)
 
+def mix(color1, color2, t) -> Tuple[int,int,int]:
+    return tuple(
+        int(c1 * (1 - t) + c2 * t)
+        for c1, c2 in zip(color1, color2)
+    )
+
 def addt(t1 : Tuple[float], t2 : Tuple[float]) -> Tuple[float]:
     assert len(t1) == len(t2), "Les tuples doivent avoir la mâme taille"
     return [t1[i] + t2[i] for i in range(len(t1))]
@@ -71,18 +77,26 @@ class Drawing:
 
     """Circle"""
     def __init__(self, center : Coord, radius_horizontal : int, radius_vertical : int, color : Couleur, width : int = 1):
-        self.type : str
+        self.type : str = "circle"
         self.color = color
         self.radiuses = (radius_horizontal, radius_vertical)
         self.width = width
 
     """Line"""
     def __init__(self, start : Coord, end : Coord, color : Couleur, width : int = 1):
-        self.type : str
+        self.type : str = "line"
         self.color = color
         self.width = width
+        self.start : Coord = start
+        self.end : Coord = end
 
-    def draw(self, surf) -> Surface:
+    """raw
+    format ->  dict((pixel_x,pixel_y)) = color
+    and the dict must be the same size as the canvas"""
+    def __init__(self, raw_data : Dict[Coord,Couleur]):
+        self.type : str = "Raw"
+
+    def draw(self, surf):
         if not hasattr(self,"type"):
             raise NotImplementedError("Type de dessin non implémenté")
         if self.type == "rect":
@@ -104,18 +118,18 @@ class Canvas(Surface):
         super().__init__(taille, pygame.SRCALPHA)
         self.draw_history : List[Drawing] = []
 
-    def refresh(self):
+    def redraw(self):
         affiche_rectangle_plein((0,0), self.get_size(), blanc, self)
         for drawing in self.draw_history:
             drawing.draw(self)
 
-    def draw_shape(self, drawing : Drawing):
+    def add_shape(self, drawing : Drawing):
         self.draw_history.append(drawing)
-        self.refresh()
+        self.redraw()
 
     def rewind(self, step : int = 1):
         for i in range(len(self.draw_history), max(len(self.draw_history) - step ,-1), -1):
-            pass
+            del self.draw_history[i]
 
 class Interface:
 
@@ -148,7 +162,7 @@ class Interface:
                 affiche_rectangle_plein((x+1,y+1), (x+29,y+29), color, 0)
 
     def draw_canvas(self):
-        self.canvas.refresh()
+        self.canvas.redraw()
 
 def main():
     affiche_auto_off()
