@@ -1,9 +1,10 @@
 from pygame import Surface, Vector2, Rect, Color
 from graphics import *
-from typing import List, Tuple, overload
+from typing import List, Tuple, Dict, overload
 import math
 import random
 import time
+from utilitaire import *
 
 Coord = Tuple[int, int]
 Pixel = Tuple[int, int]
@@ -112,24 +113,52 @@ class Drawing:
         elif self.type == "line":
             affiche_ligne(self.start, self.end, self.color, max(self.width,1), surf)
 
-class Canvas(Surface):
+class Canvas:
 
     def __init__(self, taille : Coord):
-        super().__init__(taille, pygame.SRCALPHA)
+        self.taille = taille
         self.draw_history : List[Drawing] = []
 
-    def redraw(self):
-        affiche_rectangle_plein((0,0), self.get_size(), blanc, self)
+    def redraw(self, center_position : Coord = (0,0)):
+        corner = soustraction_tuple(center_position, multiplication_tuple(self.taille, 0.5))
+        affiche_rectangle_plein(corner, addition_tuple(self.taille,corner), blanc)
         for drawing in self.draw_history:
-            drawing.draw(self)
+            drawing.draw(self, corner)
 
     def add_shape(self, drawing : Drawing):
         self.draw_history.append(drawing)
-        self.redraw()
 
     def rewind(self, step : int = 1):
         for i in range(len(self.draw_history), max(len(self.draw_history) - step ,-1), -1):
             del self.draw_history[i]
+
+
+class Button:
+
+    button_list : List = []
+
+    def _update_everyone(last_clic : Coord):
+        for button in Button.button_list:
+            button.update(last_clic)
+
+    def __init__(self, position : Coord, size : Coord, text : str, color : Couleur, action : callable = lambda : None, font_size : int = 20, font_name : str = "Arial", font_color : Couleur = noir):
+        self.position = position
+        self.size = size
+        self.text = text
+        self.color = color
+        self.action = action
+        self.font_size = font_size
+        self.font_name = font_name
+        self.font_color = font_color
+    
+    def draw(self):
+        affiche_rectangle_plein(self.position, add_coord(self.position, self.size), self.color)
+        affiche_texte(self.text, add_coord(self.position, (self.size[0]//2, self.size[1]//2)), self.font_color, self.font_size, self.font_name)
+
+    def update(self, click_position : Coord):
+        if self.position[0] <= click_position[0] <= self.position[0] + self.size[0] and self.position[1] <= click_position[1] <= self.position[1] + self.size[1]:
+            self.action()
+
 
 class Interface:
 
@@ -137,17 +166,26 @@ class Interface:
         init_fenetre(size[0], size[1], "Ctrl Paint")
         self.size = size
         self.choosen_color = noir
-        self.canvas = Canvas(size)
+        self.canvas = Canvas(multiplication_tuple(self.size,0.5))
+        self.background_offset = 0.0
+        self.chrono_loop = "fpsloop"
 
     def draw_background(self, offset : Coord = (0,0)):
         color1 = Color("#388CA5")
         color2 = Color("#38AAB9")
-        for x in range(0, self.size[0], TAILLE_CASE):
-            for y in range(0, self.size[1], TAILLE_CASE):
-                affiche_rectangle_plein(addt(offset,(x,y)), addt(offset,(x+TAILLE_CASE,y+TAILLE_CASE)), color1 if (x+y) % 80 == 0 else color2)
+        for x in range(-TAILLE_CASE*3, self.size[0], TAILLE_CASE):
+            for y in range(-TAILLE_CASE*3, self.size[1], TAILLE_CASE):
+                affiche_rectangle_plein(add_coord(offset,(x,y)), add_coord(offset,(x+TAILLE_CASE,y+TAILLE_CASE)), color1 if (x+y) % 80 == 0 else color2)
 
-    def draw_interface_color(self):
-        offset : Coord = (10,10)
+    def draw_interface_color(self, offset : Coord = None):
+        """
+        Affiche les couleurs disponibles pour le dessin
+        dans un carre avec un gradient de blanc a noir
+        pour indiquer la selection de la couleur
+        offset est le decalage du carre par rapport a la position (0,0) de la fenetre
+        """
+        if offset is None:
+            offset : Coord = (10,10)
         fade_scale = 0.4
         for x in range(0, 32*len(AVAILABLE_COLOR), 32):
             for y in range(0, 32*3, 32):
@@ -157,12 +195,45 @@ class Interface:
                 elif y == 64:
                     color = lerp_color(noir, color, fade_scale)
 
-                affiche_rectangle((x,y), (x+30,y+30), noir, 2)
-                affiche_rectangle((x,y), (x+30,y+30), blanc, 1)
-                affiche_rectangle_plein((x+1,y+1), (x+29,y+29), color, 0)
+                affiche_rectangle(add_coord((x,y),offset), add_coord((x+30,y+30),offset), noir, 2)
+                affiche_rectangle(add_coord((x,y),offset), add_coord((x+30,y+30), offset), blanc, 1)
+                affiche_rectangle_plein(add_coord((x+1,y+1),offset), add_coord((x+29,y+29),offset), color, 0)
 
     def draw_canvas(self):
-        self.canvas.redraw()
+        print("Redrawing canvas : Center is ", multiplication_tuple(self.size,0.25))
+        self.canvas.redraw(multiplication_tuple(self.size,0.5))
+
+    def update_interface(self,delta):
+        self.background_offset += 1
+        self.draw_background((self.background_offset % TAILLE_CASE*2,(self.background_offset*0.5) % TAILLE_CASE*2 ))
+        self.draw_interface_color()
+        self.draw_canvas()
+    
+
+    def main_loop(self):
+        init_chrono(self.chrono_loop)
+        lance_chrono(self.chrono_loop)
+
+        self.delta_time : float = 0.01
+        self.last_chronos_time = 0
+        self.frames : int = 0
+        self.act_time = 0
+        self.frame_array = [0]
+        self.displayed_frame_array = [0]
+        self.TUFA_last_refresh = 0
+        affiche_auto_off()
+
+        while pas_echap():
+            
+            
+            self.update_interface(self.delta_time)
+
+            affiche_texte(f"FPS : {round(1/self.delta_time)}/{FPS}",(0,22),blanc,20)
+            affiche_texte(f"FPS Avg: {round(moyenne_array(self.displayed_frame_array),1)} - 0.1% Low : {min_array(self.displayed_frame_array)} - Frames : {self.frames}",(0,0),blanc,20)
+            # Gestion de la framerate
+            frame_handling(self)
+
+
 
 def main():
     affiche_auto_off()
@@ -170,8 +241,8 @@ def main():
     interface.draw_background()
     interface.draw_interface_color()
     interface.draw_canvas()
-    affiche_tout()
-    wait_clic()
+    interface.main_loop()
+
 
 
 if __name__ == "__main__":
