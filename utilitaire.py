@@ -2,7 +2,7 @@ from typing import Tuple
 import time
 from graphics import *
 
-FPS = 60
+FPS = 300
 DPF = 1/FPS
 
 def millis_to_second(millis) -> float:
@@ -46,12 +46,12 @@ def frame_handling(interface):
     Met à jour les variables necessaires pour faire tourner le jeu en respectant le nombre d'images par secondes.
     """
     
-    if interface.act_time - interface.TUFA_last_refresh > TIME_UNTIL_FPS_AVERAGE:
-        interface.displayed_frame_array = interface.frame_array.copy()
-        interface.TUFA_last_refresh = interface.act_time
-        interface.frame_array.clear()
+    # if interface.act_time - interface.TUFA_last_refresh > TIME_UNTIL_FPS_AVERAGE:
+    #     interface.displayed_frame_array = interface.frame_array.copy()
+    #     interface.TUFA_last_refresh = interface.act_time
+    #     interface.frame_array.clear()
     interface.time_to_wait = max(DPF - (time.time() - interface.last_chronos_time), 0)
-    time.sleep(interface.time_to_wait)
+    #time.sleep(interface.time_to_wait)
     interface.delta_time = time.time() - interface.last_chronos_time
     interface.last_chronos_time = time.time()
     if len(interface.frame_array) >= FPS:

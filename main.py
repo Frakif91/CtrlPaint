@@ -19,7 +19,7 @@ AVAILABLE_COLOR : List[Color] = [
 
 
 TAILLE_FENETRE = (1152,648)
-TAILLE_CASE = 40
+TAILLE_CASE = 80
 TAILLE_TERRAIN = (TAILLE_FENETRE[0]//TAILLE_CASE, TAILLE_FENETRE[1]//TAILLE_CASE)
 
 def grille_vers_fenetre(i,j):
@@ -226,9 +226,16 @@ class Interface:
         color2 = Color("#38AAB9")
         for x in range(-TAILLE_CASE*3, self.size[0], TAILLE_CASE):
             for y in range(-TAILLE_CASE*3, self.size[1], TAILLE_CASE):
-                affiche_rectangle_plein(add_coord(offset,(x,y)), add_coord(offset,(x+TAILLE_CASE,y+TAILLE_CASE)), color1 if (x+y) % 80 == 0 else color2)
+                affiche_rectangle_plein(add_coord(offset,(x,y)), add_coord(offset,(x+TAILLE_CASE,y+TAILLE_CASE)), color1 if (x+y) % (TAILLE_CASE*2) < TAILLE_CASE else color2)
+
 
     def init_color_choice(self, offset : Coord = None):
+        """
+        Initialise les boutons de sélection de couleurs.
+        
+        offset est le decalage par rapport a la position (0,0) de la fenetre.
+        """
+
         self.color_buttons = []
         if offset is None:
             offset : Coord = (10,10)
@@ -241,23 +248,14 @@ class Interface:
                 elif y == 64:
                     color = lerp_color(noir, color, fade_scale)
 
-                b = Button(
-                    add_coord((x,y),offset),
-                    (30,30),
-                    "",
-                    color,
-                    self.change_color,
-                    10,
-                    "Arial",
-                    noir,
-                    color
-                )
+                b = Button(add_coord((x,y),offset),(30,30),"",color,self.change_color,10,"Arial",noir,color)
                 self.color_buttons.append(b)
 
     def draw_interface_color(self):
         for b in self.color_buttons:
             b.draw()
         og = self.color_buttons[0].position
+        affiche_rectangle(add_coord(og, (-58, 74)), add_coord(og, (-5,20)), blanc if moyenne_array(self.choosen_color) < 128 else noir, 2)
         affiche_rectangle_plein(add_coord(og, (-58, 74)), add_coord(og, (-5,20)), self.choosen_color, 0)
         
             #affiche_rectangle(b.position, add_coord(b.position, b.size), noir, 2)
