@@ -25,6 +25,7 @@
 #############################################
 
 import math
+from typing import List, Literal, Tuple
 import pygame
 from pygame.locals import *
 import random
@@ -140,6 +141,13 @@ def affiche_ligne(point_depart, point_arrivee, couleur,epaisseur = 1, target = N
     """
     point_depart,point_arrivee =__pyPoint(point_depart),__pyPoint(point_arrivee)
     pygame.draw.line((__screen if not target else target), couleur, point_depart, point_arrivee, epaisseur)
+    if __AFFICHE_AUTO:
+        affiche_tout()
+
+def affiche_lignes(points : List[Tuple[int,int]], couleur, epaisseur = 1, target = None):
+    """ affiche plusieurs segments """
+    points = [__pyPoint(point) for point in points]
+    pygame.draw.lines((__screen if not target else target), couleur, False, points, epaisseur)
     if __AFFICHE_AUTO:
         affiche_tout()
 
@@ -347,6 +355,16 @@ def affiche_texte_centre(texte,centre,couleur,taille_police = __POLICE_SIZE,poli
 __MOUSE_LEFT = 1
 __MOUSE_MIDDLE = 2
 __MOUSE_RIGHT = 3
+
+def get_clicked(button : Literal[1] = 1):
+    return pygame.mouse.get_pressed()[button]
+
+def get_mouse_pos() -> Tuple[int,int]:
+    global __H
+    pos = pygame.mouse.get_pos()
+    pos = (pos[0],__H - pos[1])
+    return pos
+
 def wait_clic():
     """ Attend que l'utilisateur clique avec le bouton gauche de la souris
         et renvoie les coordonnées du point cliqué sous la forme d'un point
@@ -382,8 +400,10 @@ def last_clic():
 __arrow=(0,0)
 __is_clic=False
 __last_clic=None
+__o__mousepos=(0,0)
+__o__curdown=False
 def __update_event():
-    global __arrow,__is_clic,__last_clic
+    global __arrow,__is_clic,__last_clic,__o__mousepos
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
             pygame.quit()
@@ -414,6 +434,9 @@ def __update_event():
 
         if event.type == pygame.MOUSEWHEEL:
             __mouse_wheel += event.y
+        
+        __o__mousepos = pygame.mouse.get_pos()
+        __o__curdown = pygame.mouse.get_pressed()[0]
 
 def get_molette():
     """

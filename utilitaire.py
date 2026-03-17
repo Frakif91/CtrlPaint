@@ -12,10 +12,10 @@ def second_to_millis(second) -> int:
     return int(second*(10**3))
 
 def addition_tuple(tuple1, tuple2) -> Tuple[float, float]:
-    return tuple1[0] + tuple2[0], tuple1[1] + tuple2[1]
+    return int(tuple1[0] + tuple2[0]), int(tuple1[1] + tuple2[1])
 
 def soustraction_tuple(tuple1, tuple2) -> Tuple[float, float]:
-    return tuple1[0] - tuple2[0], tuple1[1] - tuple2[1]
+    return int(tuple1[0] - tuple2[0]), int(tuple1[1] - tuple2[1])
 
 def multiplication_tuple(tuple, x : float):
     return tuple.__class__([i*x for i in tuple])
