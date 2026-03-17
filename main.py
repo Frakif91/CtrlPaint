@@ -112,11 +112,15 @@ class Drawing:
                 affiche_ellipse(self.center, self.radiuses, self.color, self.width, surf)
         elif self.type == "line":
             affiche_ligne(self.start, self.end, self.color, max(self.width,1), surf)
+        elif self.type == "Raw":
+            for pixel, color in self.raw_data.items():
+                affiche_pixel(pixel, color, surf)
 
 class Canvas:
 
     def __init__(self, taille : Coord):
         self.taille = taille
+        self.corner = (0,0)
         self.draw_history : List[Drawing] = []
 
     def redraw(self, center_position : Coord = (0,0)):
@@ -169,6 +173,7 @@ class Interface:
         self.canvas = Canvas(multiplication_tuple(self.size,0.5))
         self.background_offset = 0.0
         self.chrono_loop = "fpsloop"
+        self.draw_mode = "raw"
 
     def draw_background(self, offset : Coord = (0,0)):
         color1 = Color("#388CA5")
@@ -201,13 +206,21 @@ class Interface:
 
     def draw_canvas(self):
         print("Redrawing canvas : Center is ", multiplication_tuple(self.size,0.25))
-        self.canvas.redraw(multiplication_tuple(self.size,0.5))
+        self.canvas.redraw()
 
     def update_interface(self,delta):
         self.background_offset += 1
         self.draw_background((self.background_offset % TAILLE_CASE*2,(self.background_offset*0.5) % TAILLE_CASE*2 ))
         self.draw_interface_color()
         self.draw_canvas()
+    
+    def update_logic(self):
+        clic = last_clic()
+        if clic:
+            x,y = clic
+            Button._update_everyone(clic)
+            if x > self.canvas.corner[0] and x < self.canvas.corner[0] + self.canvas.taille[0] and y > self.canvas.corner[1] and y < self.canvas.corner[1] + self.canvas.taille[1]:
+                if
     
 
     def main_loop(self):
@@ -224,8 +237,6 @@ class Interface:
         affiche_auto_off()
 
         while pas_echap():
-            
-            
             self.update_interface(self.delta_time)
 
             affiche_texte(f"FPS : {round(1/self.delta_time)}/{FPS}",(0,22),blanc,20)
