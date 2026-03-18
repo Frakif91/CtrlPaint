@@ -22,6 +22,13 @@ TAILLE_FENETRE = (1152,648)
 TAILLE_CASE = 80
 TAILLE_TERRAIN = (TAILLE_FENETRE[0]//TAILLE_CASE, TAILLE_FENETRE[1]//TAILLE_CASE)
 
+def _mesure_time(func : callable, *args) -> float:
+    start = time.time()
+    func(*args)
+    print("Fonction :", func.__name__, "dure", time.time() - start, "ms" )
+    return time.time() - start
+
+
 def grille_vers_fenetre(i,j):
     x = i * TAILLE_CASE
     y = j * TAILLE_CASE
@@ -165,7 +172,8 @@ class Button:
     
     def draw(self):
         affiche_rectangle_plein(self.position, add_coord(self.position, self.size), self.color)
-        affiche_texte_centre(self.text, add_coord(self.position, multiplication_tuple(self.size,0.5)), self.font_color, self.font_size, self.font_name)
+        if self.text != "":
+            affiche_texte_centre(self.text, add_coord(self.position, multiplication_tuple(self.size,0.5)), self.font_color, self.font_size, self.font_name)
 
     def update(self, click_position : Coord):
         x,y = click_position
@@ -222,11 +230,13 @@ class Interface:
         Dessine le fond de l'interface en utilisant une grille de carres de deux couleurs.
         offset est le decalage par rapport a la position (0,0) de la fenetre.
         """
+        time_start = time.time()
         color1 = Color("#388CA5")
         color2 = Color("#38AAB9")
         for x in range(-TAILLE_CASE*3, self.size[0], TAILLE_CASE):
             for y in range(-TAILLE_CASE*3, self.size[1], TAILLE_CASE):
                 affiche_rectangle_plein(add_coord(offset,(x,y)), add_coord(offset,(x+TAILLE_CASE,y+TAILLE_CASE)), color1 if (x+y) % (TAILLE_CASE*2) < TAILLE_CASE else color2)
+        print("Temps de dessin de l'arriere plan : ", time.time() - time_start, "ms")
 
 
     def init_color_choice(self, offset : Coord = None):
@@ -252,6 +262,7 @@ class Interface:
                 self.color_buttons.append(b)
 
     def draw_interface_color(self):
+
         for b in self.color_buttons:
             b.draw()
         og = self.color_buttons[0].position
@@ -271,12 +282,16 @@ class Interface:
         self.canvas.redraw(multiplication_tuple(self.size,0.5))
 
     def update_interface(self,delta):
-        self.background_offset += 1
-        self.draw_background((self.background_offset % TAILLE_CASE*2,(self.background_offset*0.5) % TAILLE_CASE*2 ))
+        self.background_offset += delta * 30
+        self.draw_background((int(self.background_offset) % TAILLE_CASE*2,(self.background_offset*0.5) % TAILLE_CASE*2 ))
+        #_mesure_time()
         self.draw_interface_color()
+        #_mesure_time()
         self.update_logic()
+        #_mesure_time()
         self.draw_canvas()
         if self.pending_drawing:
+            #_mesure_time(
             self.pending_drawing.draw(self.canvas.corner)
         self.undo_button.draw()
 
@@ -311,7 +326,7 @@ class Interface:
         self.delta_time : float = 0.01
         self.last_chronos_time = 0
         self.frames : int = 0
-        self.act_time = 0
+        self.act_time = 1
         self.frame_array = [0]
         self.displayed_frame_array = [0]
         self.TUFA_last_refresh = 0
@@ -321,7 +336,7 @@ class Interface:
             self.update_interface(self.delta_time)
 
             affiche_texte(f"FPS : {round(1/self.delta_time)}/{FPS}",(0,22),blanc,20)
-            affiche_texte(f"FPS Avg: {round(moyenne_array(self.displayed_frame_array),1)} - 0.1% Low : {min_array(self.displayed_frame_array)} - Frames : {self.frames}",(0,0),blanc,20)
+            affiche_texte(f"FPS Avg: {round(moyenne_array(self.displayed_frame_array),1)} - 0.1% Low : {round(min_array(self.displayed_frame_array),1)} - Frames : {self.frames}",(0,0),blanc,20)
             # Gestion de la framerate
             frame_handling(self)
 
